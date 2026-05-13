@@ -11,6 +11,18 @@ from services.designer import create_smart_poster # <--- Pastikan ini ada
 load_dotenv()
 app = Flask(__name__)
 
+def infer_category_from_motif(motif_id):
+    motif_lower = (motif_id or "").lower()
+    if motif_lower.startswith("batik_"):
+        return "Batik"
+    if motif_lower.startswith("anyaman_"):
+        return "Anyaman"
+    if motif_lower.startswith("tenun_"):
+        return "Tenun"
+    if motif_lower.startswith("motif_"):
+        return "Motif"
+    return "Umum"
+
 # Konfigurasi Folder
 UPLOAD_FOLDER = 'temp_uploads'
 POSTER_FOLDER = 'static_posters'
@@ -51,6 +63,11 @@ def analyze():
             "warning": "⚠️ Motif Sakral Terdeteksi! Tidak dapat dikomersialkan."
         })
 
+    raw_category = brain.get('category', 'Umum')
+    category = raw_category
+    if not raw_category or raw_category.strip().lower() in ["umum", "general", "unknown"]:
+        category = infer_category_from_motif(motif_id)
+
     return jsonify({
         "status": "success",
         "data": {
@@ -58,7 +75,7 @@ def analyze():
             "motif_name": motif_id.replace("_", " ").title(), 
             "confidence": res['confidence'],
             "philosophical_context": brain.get('text', 'Deskripsi belum tersedia.'),
-            "category": brain.get('category', 'Umum'),
+            "category": category,
             "source": brain.get('source', 'Tim Riset')
         }
     })

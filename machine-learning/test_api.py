@@ -5,7 +5,7 @@ import json
 # Konfigurasi URL
 BASE_URL = "http://localhost:5000"
 # Tentukan gambar tes
-TEST_IMAGE_PATH = os.path.join("imgtest", "gedonggincu1.jpg") 
+TEST_IMAGE_PATH = os.path.join("imgtest", "aseupan.jpg") 
 
 def print_separator(title):
     print("\n" + "="*50)
