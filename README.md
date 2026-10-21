@@ -1,95 +1,122 @@
-# 🇮🇩 CARITA - Cultural AI for Retail & Identity-Telling Assistant
+<div align="center">
 
-**CARITA** adalah platform berbasis AI yang memberdayakan perajin lokal (khususnya Majalengka) untuk meningkatkan nilai jual produk melalui *storytelling* budaya yang otentik. Sistem ini memadukan **Vision AI** untuk mengenali motif dan **Generative AI** untuk membuat narasi pemasaran serta poster digital secara otomatis.
+# CARITA
+
+**Cultural AI for Retail & Identity-Telling Assistant**
+
+CARITA helps local artisans, starting with those in Majalengka, raise the value of their products<br>
+through authentic cultural storytelling. It recognizes batik and woven motifs from a photo,<br>
+writes a marketing narrative grounded in curated cultural research,<br>
+and produces a ready-to-post digital poster.
+
+<br>
+
+![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
+![Filament](https://img.shields.io/badge/Filament-v3-FDAE4B)
+![Livewire](https://img.shields.io/badge/Livewire-3-FB70A9?logo=livewire&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwindcss&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?logo=flask&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-F55036)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+[Features](#features) · [Architecture](#architecture) · [Getting started](#getting-started) · [How it works](#how-it-works) · [License](#license)
+
+</div>
 
 ---
 
-## 🌟 Fitur Utama
+## Table of contents
 
-### 🧠 AI & Core Features
-* **📸 Vision Recognition (CLIP):** AI mampu mengenali motif batik atau anyaman dari foto yang diunggah (Zero-Shot Learning), bahkan jika foto tersebut diambil dari sudut yang sulit.
-* **📝 RAG Storytelling (Groq):** Menghasilkan narasi yang tidak berhalusinasi karena berbasis data riset ("Cultural Brain") yang tersimpan dalam Vector Database.
-* **🎨 Smart Poster Generator:** Fitur baru! Otomatis menghapus *background* foto produk (menggunakan `rembg`) dan mendesain poster pemasaran profesional dengan *template* yang sesuai kategori (Heritage/Modern).
-* **🛡️ Cultural Guardrail:** Sistem keamanan etika yang mencegah penyalahgunaan motif berlabel **[Sakral]** untuk tujuan komersial.
+- [Features](#features)
+- [Architecture](#architecture)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [How it works](#how-it-works)
+- [Project structure](#project-structure)
+- [Team](#team)
+- [License](#license)
 
-### 💻 Aplikasi Web
-* **Admin Panel (Filament PHP):** Dashboard manajemen data budaya yang modern dan *user-friendly* untuk Kurator/Admin.
-* **User Dashboard (Livewire Flux):** Antarmuka responsif bagi perajin untuk mengelola produk, melihat riwayat cerita, dan mengunduh aset digital (QR & Poster).
-* **Public Story Page:** Halaman publik `/s/{uuid}` yang SEO-friendly untuk setiap produk.
-* **Marketplace Ready:** Struktur database kini mendukung manajemen produk (Harga, Deskripsi, Stok) yang terhubung dengan cerita budaya.
+## Features
 
----
+### AI capabilities
 
-## 🏗️ Arsitektur Sistem
+- **Vision recognition (CLIP).** Identifies batik and woven motifs from an uploaded photo using zero-shot classification, including photos taken at awkward angles.
+- **RAG storytelling (Groq).** Generates narratives from curated research data (the "Cultural Brain") stored in a vector database, which keeps the text tied to documented sources instead of invented detail.
+- **Smart poster generator.** Removes the product photo background with `rembg` and lays out a marketing poster using a Heritage or Modern template, chosen by product category.
+- **Cultural guardrail.** Blocks commercial use of motifs labeled **[Sakral]** (sacred).
 
-Sistem menggunakan arsitektur **Hybrid Monolith**, di mana aplikasi utama berbasis PHP berkomunikasi dengan *Microservice* AI berbasis Python.
+### Web application
 
-```
+- **Admin panel (Filament).** A dashboard where curators manage cultural data.
+- **User dashboard (Livewire Flux).** A responsive interface where artisans manage products, review past stories, and download digital assets such as QR codes and posters.
+- **Public story page.** Each product gets a search-friendly page at `/s/{uuid}`.
+- **Marketplace-ready data model.** Product records (price, description, stock) link directly to their cultural stories.
+
+## Architecture
+
+CARITA is a hybrid monolith. A Laravel application handles the user interface, data, and job queue, and it calls a separate Python Flask microservice for all AI work over a REST API.
+
+```mermaid
 graph TD
-    subgraph "User Experience"
-        User[👤 Perajin] -->|Upload Foto| Frontend[🟢 Laravel Livewire]
-        Frontend -->|Manage Data| Filament[🟠 Filament Admin]
+    subgraph "User experience"
+        User["Artisan"] -->|Uploads photo| Frontend["Laravel + Livewire"]
+        Frontend -->|Manages data| Filament["Filament admin"]
     end
-    
-    subgraph "Data & Storage"
-        MySQL[(🗄️ MySQL: Data Relasional)]
-        ChromaDB[(📚 ChromaDB: Vector Search)]
-        Storage[📂 Storage: Foto & Poster]
+
+    subgraph "Data and storage"
+        MySQL[("MySQL: relational data and embeddings")]
+        Storage["File storage: photos and posters"]
     end
-    
-    subgraph "AI Microservice (Flask)"
-        API[🐍 Python Flask API]
-        Vision[👁️ CLIP Vision Model]
-        RAG[🧠 RAG Engine (Groq)]
-        Designer[🎨 Poster Designer (Rembg)]
+
+    subgraph "AI microservice (Flask)"
+        API["Python Flask API"]
+        Vision["CLIP vision model"]
+        RAG["RAG engine (Groq)"]
+        Designer["Poster designer (rembg)"]
     end
 
     Frontend <-->|REST API| API
     Frontend <--> MySQL
-    
+    Frontend --> Storage
+
     API --> Vision
-    API -->|Context Retrieval| ChromaDB
-    API -->|Generate Text| RAG
-    API -->|Process Image| Designer
-````
+    API -->|Context retrieval| MySQL
+    API -->|Generate text| RAG
+    API -->|Process image| Designer
+```
 
------
+## Tech stack
 
-## 🛠️ Teknologi (Tech Stack)
+| Layer | Technology |
+| --- | --- |
+| Web framework | Laravel 12 |
+| Admin panel | Filament v3 |
+| Frontend | Livewire 3, Volt, Flux UI, Tailwind CSS |
+| Database | MySQL 8.0 |
+| Queue | Redis (runs AI jobs in the background) |
+| AI service | Python, Flask |
+| Language model | Groq API |
+| Vision model | OpenAI CLIP via `sentence-transformers` |
+| Vector store | MySQL (cultural knowledge embeddings) |
+| Image processing | `rembg`, Pillow |
 
-### **Backend & Frontend (Laravel)**
+## Getting started
 
-  * **Framework:** Laravel 12
-  * **Admin Panel:** FilamentPHP v3
-  * **Frontend Stack:** Livewire 3 + Volt + Flux UI (Komponen Modern)
-  * **Styling:** Tailwind CSS
-  * **Database:** MySQL 8.0
-  * **Queue:** Redis (Untuk memproses job AI di background)
+These steps set up a local development environment.
 
-### **AI Service (Python)**
+### Prerequisites
 
-  * **Framework:** Flask
-  * **LLM Engine:** Groq API
-  * **Vision Model:** OpenAI CLIP (via `sentence-transformers`)
-  * **Vector DB:** MySQL (Menyimpan embedding pengetahuan budaya)
-  * **Image Processing:** `rembg` (Hapus background), `Pillow` (Manipulasi gambar)
+- PHP 8.2 or later and Composer
+- Python 3.10 or later and pip
+- Node.js and npm
+- MySQL and Redis
+- A [Groq API key](https://console.groq.com/keys)
 
------
-
-## 🚀 Panduan Instalasi
-
-Ikuti langkah ini untuk menjalankan CARITA di lingkungan lokal (Development).
-
-### Prasyarat
-
-  * PHP \>= 8.2, Composer
-  * Python \>= 3.10, Pip
-  * Node.js & NPM
-  * MySQL & Redis
-
-### 1\. Setup Aplikasi Utama
-
-Masuk ke folder `application`:
+### 1. Set up the Laravel application
 
 ```bash
 cd application
@@ -98,16 +125,16 @@ npm install
 cp .env.example .env
 ```
 
-Konfigurasi `.env` (Sesuaikan database & Redis):
+Edit `.env` to match your local database and Redis setup:
 
-```env
+```dotenv
 DB_CONNECTION=mysql
 DB_DATABASE=carita_db
 QUEUE_CONNECTION=redis
 FILESYSTEM_DISK=public
 ```
 
-Jalankan migrasi dan seeder (Penting: Seeder akan membuat Role Admin & User):
+Generate the application key, run migrations, and link storage. The seeder creates the Admin and User roles, so do not skip `--seed`.
 
 ```bash
 php artisan key:generate
@@ -115,94 +142,88 @@ php artisan migrate --seed
 php artisan storage:link
 ```
 
-### 2\. Setup AI Service
-
-Masuk ke folder `machine-learning`:
+### 2. Set up the AI service
 
 ```bash
 cd machine-learning
 python -m venv venv
-# Aktifkan Venv (Windows: venv\Scripts\activate || Mac/Linux: source venv/bin/activate)
-```
 
-Install dependensi (Gunakan perintah khusus untuk PyTorch CPU agar ringan):
+# Activate the virtual environment
+# Windows:       venv\Scripts\activate
+# macOS / Linux: source venv/bin/activate
 
-```bash
-# Install sisa library
 pip install -r requirements.txt
 ```
 
-Buat file `.env` di folder `machine-learning` dan isi API Key:
+Create a `.env` file in `machine-learning`:
 
-```env
-# Wajib diisi untuk fitur Chat/Story
-GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxx
-# Koneksi Database
+```dotenv
+# Required for story generation
+GROQ_API_KEY=your_groq_api_key
+
+# Database connection
 DB_HOST=localhost
 DB_USER=root
 DB_PASSWORD=
 DB_NAME=carita_db
 ```
 
-### 3\. Menjalankan Sistem
+### 3. Run the system
 
-Anda perlu menjalankan **3 terminal** berbeda:
+Start each process in its own terminal.
 
-  * **Terminal 1 (Laravel Server):**
+| Terminal | Directory | Command |
+| --- | --- | --- |
+| 1. Web server | `application` | `php artisan serve` |
+| 2. Queue worker | `application` | `php artisan queue:work` |
+| 3. AI service | `machine-learning` | `python app.py` |
 
-    ```bash
-    cd application
-    php artisan serve
-    ```
+Then open:
 
-  * **Terminal 2 (Queue Worker & Assets):**
+- Application: <http://localhost:8000>
+- Admin panel: <http://localhost:8000/admin>
 
-    ```bash
-    cd application
-    php artisan queue:work
-    ```
+## How it works
 
-  * **Terminal 3 (Python AI Service):**
+### Adding cultural knowledge (admin)
 
-    ```bash
-    cd machine-learning
-    python app.py
-    ```
+1. Sign in to the Filament admin panel.
+2. Add a cultural chunk, such as the philosophy behind the Batik Angin motif, together with a reference photo.
+3. The AI service embeds the text and image and stores them for retrieval.
 
-Akses aplikasi di: `http://localhost:8000`  
-Akses Admin Panel di: `http://localhost:8000/admin`
+### Creating a story (artisan)
 
------
+1. Sign in and select **Create Story**.
+2. Upload a product photo.
+3. The system processes it in four steps:
+   1. The vision model compares the photo against the known motif database.
+   2. If it finds a match, the RAG engine retrieves the motif's cultural background.
+   3. The language model writes a narrative from that background.
+   4. The poster designer builds a marketing poster.
+4. The artisan receives the narrative, a QR code, and a digital poster.
 
-## 📖 Cara Kerja Fitur Utama
+## Project structure
 
-1.  **Input Pengetahuan (Admin):**
+```text
+carita/
+├── application/        Laravel app: web UI, admin panel, database, queue
+├── machine-learning/   Flask AI service: vision, RAG, poster generation
+├── LICENSE
+└── README.md
+```
 
-      * Admin masuk ke panel Filament.
-      * Menambahkan "Cultural Chunk" (misal: Filosofi Batik Angin) + Foto Referensi.
-      * Python Service otomatis melakukan *embedding* teks dan gambar ke ChromaDB.
+## Team
 
-2.  **User Flow (Perajin):**
+Built by team WindTech.
 
-      * User login -\> Klik "Buat Cerita".
-      * Upload foto produk.
-      * **Proses AI:**
-        1.  Vision AI membandingkan foto user dengan database motif.
-        2.  Jika motif dikenali, RAG mengambil filosofinya.
-        3.  LLM (Groq) menulis narasi puitis.
-        4.  Designer AI membuat poster otomatis.
-      * User menerima: Narasi, QR Code, dan Poster Digital siap posting.
+| Name | Role |
+| --- | --- |
+| Abrar Wahid | AI/ML Engineer |
+| Ahmad Nur Ain | Backend Developer |
+| Wildan Zhilal Manafi | Fullstack Developer |
+| Zacky Hafsari | Frontend Developer |
+| Novi Silvia | Research and Culture |
 
------
+## License
 
-## 👥 Tim Pengembang (WindTech)
-
-  * **AI/ML Engineer:** Abrar Wahid
-  * **Backend Developer:** Ahmad Nur Ain
-  * **Fullstack Developer:** Wildan Zhilal Manafi
-  * **Frontend Developer:** Zacky Hafsari
-  * **Riset & Budaya:** Novi Silvia
-
------
-
-*Dibuat dengan ❤️ untuk melestarikan Budaya Indonesia.*
+This project is licensed under the [MIT License](LICENSE).
